@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Supervalu | Middleware | Inventory | Apache httpd</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A simple app made with the vue js and django for apache inventory">
+
+    <meta name="keywords" content="vuejs, django, crudapp, restapi">
+    <!-- bootstap -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- boostrap css -->
+    <style>
+    /* Absolute Center Spinner */
+.loading {
+  position: fixed;
+  z-index: 999;
+  height: 2em;
+  width: 2em;
+  overflow: show;
+  margin: auto;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+/* Transparent Overlay */
+.loading:before {
+  content: '';
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.3);
+}
+
+/* :not(:required) hides these rules from IE9 and below */
+.loading:not(:required) {
+  /* hide "loading..." text */
+  font: 0/0 a;
+  color: transparent;
+  text-shadow: none;
+  background-color: transparent;
+  border: 0;
+}
+
+.loading:not(:required):after {
+  content: '';
+  display: block;
+  font-size: 10px;
+  width: 1em;
+  height: 1em;
+  margin-top: -0.5em;
+  -webkit-animation: spinner 1500ms infinite linear;
+  -moz-animation: spinner 1500ms infinite linear;
+  -ms-animation: spinner 1500ms infinite linear;
+  -o-animation: spinner 1500ms infinite linear;
+  animation: spinner 1500ms infinite linear;
+  border-radius: 0.5em;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+  box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+}
+
+/* Animation */
+
+@-webkit-keyframes spinner {
+  0% {
+    -webkit-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-moz-keyframes spinner {
+  0% {
+    -webkit-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-o-keyframes spinner {
+  0% {
+    -webkit-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes spinner {
+  0% {
+    -webkit-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+    </style>
+
+  </head>
+
+  <body>
+    <div id="starting">
+      <div class="container">
+	  {% if user.is_authenticated %}
+	  <div align="right"><p>Logged in as {{ user.username }} !!!|<a href="/admin/logout?next=/apache/inv">Log out</a></p></div> 
+	  {% else %}
+	  <div align="right"><p>Not Logged in!!!|<a href="/admin/login?next=/apache/inv">Log in</a></p></div> 
+	  {% endif %}          
+        <div class="row">
+          <h1>HTTPD list</h1>
+		  {% if user.is_authenticated %}
+          <button  type="button" class="btn btn-primary" data-toggle="modal" data-target="#addHTTPDModal">ADD new Instance</button>
+		  {% endif %}          
+          &emsp;
+          <div class="form-inline my-2 my-lg-0" style="margin-left: 40%;">
+            <input class="form-control mr-sm-2" type="text" placeholder="Search" v-model="search_term" aria-label="Search">
+            <button class="btn btn-outline-success my-2 my-sm-0" v-on:click.prevent="getHTTPDs()">Search</button>
+          </div>
+          <table class="table table-responsive table-striped table-hover" id="instlist">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">App</th>
+                <th scope="col">Server</th>
+                <th scope="col">VIP</th>
+                <th scope="col">Instance_group</th>
+                <th scope="col">User</th>
+                <th scope="col">Ver</th>
+                <th scope="col">Switch</th>
+                <th scope="col">initscript</th>
+                <th scope="col">apachescript</th>
+                <th scope="col">listen</th>
+                <th scope="col">env</th>
+                <th scope="col">AppDL</th>
+                <th scope="col">Appowner</th>
+                <th scope="col">Comment</th>
+                <th scope="col">DC</th>
+                <th scope="col">OS</th>
+                <th scope="col">OSver</th>
+				<th scope="col">CI</th>
+				<th scope="col">giturl</th>
+				<th scope="col">active</th>
+				<th scope="col">Edit</th>
+				<th scope="col">Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="instance in instances">
+                <th scope="row">${instance.apache_id}</th>
+                <td>${instance.apache_appname}</td>
+                <td>${instance.apache_server}</td>
+                <td>${instance.apache_vipurl}</td>
+                <td>${instance.apache_instance_group}</td>
+                <td>${instance.apache_user}</td>
+                <td>${instance.apache_httpd_version}</td>
+                <td>${instance.apache_httpdswitch}</td>
+                <td>${instance.apache_initscript}</td>
+                <td>${instance.apache_apachescript}</td>
+                <td>${instance.apache_listen_hostport}</td>
+                <td>${instance.apache_environment}</td>
+                <td>${instance.apache_AppDL}</td>
+                <td>${instance.apache_Appowner}</td>
+                <td>${instance.apache_comments}</td>
+                <td>${instance.apache_datacenter}</td>
+                <td>${instance.apache_OS}</td>
+                <td>${instance.apache_OSver}</td>
+				<td>${instance.apache_ciname}</td>
+				<td>${instance.apache_giturl}</td>
+				<td>${instance.apache_active}</td>
+
+                <td>
+					{% if user.is_authenticated %}
+                  <button class="btn btn-info" v-on:click="getHTTPD(instance.apache_id)"><span class="glyphicon glyphicon-edit"></span></button>
+				    {% else %}
+				   <button class="btn btn-info" v-on:click="getHTTPD(instance.apache_id)" disabled><span class="glyphicon glyphicon-edit"></span></button>
+				    {% endif %}
+				   
+                </td>
+				<td>
+					{% if user.is_authenticated %}
+					<button class="btn btn-danger" v-on:click="deleteHTTPD(instance.apache_id)"><span class="glyphicon glyphicon-remove"></span></button>
+					{% else %}
+					<button class="btn btn-danger" v-on:click="deleteHTTPD(instance.apache_id)" disabled><span class="glyphicon glyphicon-remove"></span></button>
+					{% endif %}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- Add HTTPd Modal -->
+          <div class="modal fade" id="addHTTPDModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLongTitle">ADD HTTPD</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form v-on:submit.prevent="addHTTPD()">
+                <div class="modal-body">
+                    <div class="form-group">
+                      <label for="apache_appname">App</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_appname"
+                        placeholder="Enter App"
+                        v-model="newHTTPD.apache_appname"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_server">Server</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_server"
+                        placeholder="Enter Server"
+                        v-model="newHTTPD.apache_server"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_vipurl">VIP</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_vipurl"
+                        placeholder="Enter VIP"
+                        v-model="newHTTPD.apache_vipurl"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_instance_group">Instance_group</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_instance_group"
+                        placeholder="Enter Instance_group"
+                        v-model="newHTTPD.apache_instance_group"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_user">User</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_user"
+                        placeholder="Enter User"
+                        v-model="newHTTPD.apache_user"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_httpd_version">Ver</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_httpd_version"
+                        placeholder="Enter Ver"
+                        v-model="newHTTPD.apache_httpd_version"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_httpdswitch">Switch</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_httpdswitch"
+                        placeholder="Enter Switch"
+                        v-model="newHTTPD.apache_httpdswitch" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_initscript">initscript</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_initscript"
+                        placeholder="Enter initscript"
+                        v-model="newHTTPD.apache_initscript"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_apachescript">apachescript</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_apachescript"
+                        placeholder="Enter apachescript"
+                        v-model="newHTTPD.apache_apachescript"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_listen_hostport">listen</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_listen_hostport"
+                        placeholder="Enter listen"
+                        v-model="newHTTPD.apache_listen_hostport"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_environment">env</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_environment"
+                        placeholder="Enter env"
+                        v-model="newHTTPD.apache_environment"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_AppDL">AppDL</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_AppDL"
+                        placeholder="Enter AppDL"
+                        v-model="newHTTPD.apache_AppDL" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_Appowner">Appowner</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_Appowner"
+                        placeholder="Enter Appowner"
+                        v-model="newHTTPD.apache_Appowner" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_comments">Comment</label>
+                     <textarea
+                        type="text"
+                        class="form-control"
+                        id="apache_comments"
+                        placeholder="Enter Comment"
+                        v-model="newHTTPD.apache_comments"
+						rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_datacenter">DC</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_datacenter"
+                        placeholder="Enter DC"
+                        v-model="newHTTPD.apache_datacenter"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_OS">OS</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_OS"
+                        placeholder="Enter OS"
+                        v-model="newHTTPD.apache_OS"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_OSver">OSver</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_OSver"
+                        placeholder="Enter OSver"
+                        v-model="newHTTPD.apache_OSver" >
+                    </div>
+					<div class="form-group">
+					  <label for="apache_ciname">CI</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_ciname"
+                        placeholder="Enter CI"
+                        v-model="newHTTPD.apache_ciname"
+                        required="required" >
+                    </div>
+					<div class="form-group">
+					  <label for="apache_giturl">giturl</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_ciname"
+                        placeholder="Enter GitURL"
+                        v-model="newHTTPD.apache_giturl" >
+                    </div>
+					<div class="form-group">
+					  <label for="apache_active">active</label>
+                     <select
+                        class="form-control"
+                        id="apache_active"
+                        placeholder="True/False"
+                        v-model="newHTTPD.apache_active"
+                        required="required" >
+						<option value="True" selected>True</option>
+						<option value="False">False</option>
+					</select>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary m-progress" data-dismiss="modal">Close</button>
+                  <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+                </form>
+              </div>
+            </div>
+            <div class="loading" v-if="loading===true">Loading&#8230;</div>
+          </div>
+          <!-- End of add httpd modal -->
+          <!-- Edit HTTPD Modal -->
+          <div class="modal fade" id="editHTTPDModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLongTitle">EDIT HTTPD Instance</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form v-on:submit.prevent="updateHTTPD()">
+                <div class="modal-body">
+                    
+                    <div class="form-group">
+                      <label for="apache_appname">App</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_appname"
+                        placeholder="Enter App"
+                        v-model="currentHTTPD.apache_appname"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_server">Server</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_server"
+                        placeholder="Enter Server"
+                        v-model="currentHTTPD.apache_server"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_vipurl">VIP</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_vipurl"
+                        placeholder="Enter VIP"
+                        v-model="currentHTTPD.apache_vipurl"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_instance_group">Instance_group</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_instance_group"
+                        placeholder="Enter Instance_group"
+                        v-model="currentHTTPD.apache_instance_group"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_user">User</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_user"
+                        placeholder="Enter User"
+                        v-model="currentHTTPD.apache_user"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_httpd_version">Ver</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_httpd_version"
+                        placeholder="Enter Ver"
+                        v-model="currentHTTPD.apache_httpd_version"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_httpdswitch">Switch</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_httpdswitch"
+                        placeholder="Enter Switch"
+                        v-model="currentHTTPD.apache_httpdswitch" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_initscript">initscript</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_initscript"
+                        placeholder="Enter initscript"
+                        v-model="currentHTTPD.apache_initscript"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_apachescript">apachescript</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_apachescript"
+                        placeholder="Enter apachescript"
+                        v-model="currentHTTPD.apache_apachescript"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_listen_hostport">listen</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_listen_hostport"
+                        placeholder="Enter listen"
+                        v-model="currentHTTPD.apache_listen_hostport"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_environment">env</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_environment"
+                        placeholder="Enter env"
+                        v-model="currentHTTPD.apache_environment"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_AppDL">AppDL</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_AppDL"
+                        placeholder="Enter AppDL"
+                        v-model="currentHTTPD.apache_AppDL" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_Appowner">Appowner</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_Appowner"
+                        placeholder="Enter Appowner"
+                        v-model="currentHTTPD.apache_Appowner" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_comments">Comment</label>
+                     <textarea
+                        type="text"
+                        class="form-control"
+                        id="apache_comments"
+                        placeholder="Enter Comment"
+                        v-model="currentHTTPD.apache_comments"
+						rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_datacenter">DC</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_datacenter"
+                        placeholder="Enter DC"
+                        v-model="currentHTTPD.apache_datacenter"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_OS">OS</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_OS"
+                        placeholder="Enter OS"
+                        v-model="currentHTTPD.apache_OS"
+                        required="required" >
+                    </div>
+                    <div class="form-group">
+                      <label for="apache_OSver">OSver</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_OSver"
+                        placeholder="Enter OSver"
+                        v-model="currentHTTPD.apache_OSver" >
+                    </div>
+				<div class="form-group">
+					  <label for="apache_ciname">CI</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_ciname"
+                        placeholder="Enter CI"
+                        v-model="currentHTTPD.apache_ciname"
+                        required="required" >
+                    </div>
+					<div class="form-group">
+					  <label for="apache_giturl">giturl</label>
+                     <input
+                        type="text"
+                        class="form-control"
+                        id="apache_ciname"
+                        placeholder="Enter GitURL"
+                        v-model="currentHTTPD.apache_giturl" >
+                    </div>
+					<div class="form-group">
+					  <label for="apache_active">active</label>
+                     <select
+                        class="form-control"
+                        id="apache_active"
+                        placeholder="True/False"
+                        v-model="currentHTTPD.apache_active"
+                        required="required" >
+						<option value="True" selected>True</option>
+						<option value="False">False</option>
+					</select>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary m-progress" data-dismiss="modal">Close</button>
+                  <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+                </form>
+              </div>
+            </div>
+            <div class="loading" v-if="loading===true">Loading&#8230;</div>
+          </div>
+          <!-- End of edit httpd modal -->
+
+        </div>
+      </div>
+      <div class="loading" v-if="loading===true">Loading&#8230;</div>
+
+    </div>
+
+  <!-- bootrtap js files -->
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <!-- vue.js files -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.5"></script>
+  <script type="text/javascript">
+    Vue.http.headers.common['X-CSRFToken'] = "{{ csrf_token }}";
+    new Vue({
+      el: '#starting',
+      delimiters: ['${','}'],
+      data: {
+        instances: [],
+        loading: true,
+        currentHTTPD: {},
+        message: null,
+        newHTTPD: { 'apache_ciname': null, 'apache_appname': null, 'apache_server': null, 'apache_vipurl': null, 'apache_instance_group': null, 'apache_user': null, 'apache_httpd_version': null, 'apache_httpdswitch': null, 'apache_initscript': null, 'apache_apachescript': null, 'apache_listen_hostport': null, 'apache_environment': null, 'apache_AppDL': null, 'apache_Appowner': null, 'apache_comments': null, 'apache_datacenter': null, 'apache_OS': null, 'apache_OSver': null , 'apache_giturl': null, 'apache_active': null},
+        search_term: '',
+      },
+      mounted: function() {
+        this.getHTTPDs();
+      },
+      methods: {
+        getHTTPDs: function() {
+          let api_url = '/apache/api/apache/';
+          if(this.search_term!==''||this.search_term!==null) {
+            api_url = `/apache/api/apache/?search=${this.search_term}`
+          }
+          this.loading = true;
+          this.$http.get(api_url)
+              .then((response) => {
+                this.instances = response.data;
+                this.loading = false;
+              })
+              .catch((err) => {
+                this.loading = false;
+                console.log(err);
+              })
+        },
+        getHTTPD: function(id) {
+          this.loading = true;
+          this.$http.get(`/apache/api/apache/${id}/`)
+              .then((response) => {
+                this.currentHTTPD = response.data;
+                $("#editHTTPDModal").modal('show');
+                this.loading = false;
+              })
+              .catch((err) => {
+                this.loading = false;
+                console.log(err);
+              })
+        },
+        addHTTPD: function() {
+          this.loading = true;
+          this.$http.post('/apache/api/apache/',this.newHTTPD)
+              .then((response) => {
+                this.loading = true;
+                this.getHTTPDs();
+              })
+              .catch((err) => {
+                this.loading = true;
+                console.log(err);
+              })
+        },
+        updateHTTPD: function() {
+          this.loading = true;
+          this.$http.put(`/apache/api/apache/${this.currentHTTPD.apache_id}/`, this.currentHTTPD)
+              .then((response) => {
+                this.loading = false;
+                this.currentHTTPD = response.data;
+                this.getHTTPDs();
+              })
+              .catch((err) => {
+                this.loading = false;
+                console.log(err);
+              })
+        },
+        deleteHTTPD: function(id) {
+		  var result = confirm("Want to delete?");
+			if (result) {
+          this.loading = true;
+          this.$http.delete(`/apache/api/apache/${id}/`)
+              .then((response) => {
+                this.loading = false;
+                this.getHTTPDs();
+              })
+              .catch((err) => {
+                this.loading = false;
+                console.log(err);
+              })
+			 }
+        }
+      }
+    });
+
+
+  </script>
+  </body>
+</html>
